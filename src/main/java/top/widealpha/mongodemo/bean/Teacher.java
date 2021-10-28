@@ -1,10 +1,17 @@
 package top.widealpha.mongodemo.bean;
 
+import com.alibaba.excel.annotation.ExcelProperty;
+
 public class Teacher {
+    @ExcelProperty("教师编号")
     String tid;
+    @ExcelProperty("教师姓名")
     String name;
+    @ExcelProperty("性别")
     String sex;
+    @ExcelProperty("年龄")
     Integer age;
+    @ExcelProperty("院系名称")
     String dname;
 
     public String getTid() {

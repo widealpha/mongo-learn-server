@@ -1,13 +1,16 @@
 package top.widealpha.mongodemo;
 
+import com.alibaba.excel.EasyExcel;
 import com.mongodb.MongoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import top.widealpha.mongodemo.bean.Course;
 import top.widealpha.mongodemo.bean.Student;
 import top.widealpha.mongodemo.bean.Teacher;
 import top.widealpha.mongodemo.dao.MongoDao;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,8 +41,13 @@ public class MongoController {
     }
 
     @RequestMapping("addStudent")
-    String addStudent(String sid, Integer age, String sex, String name, String dname,
-                      @RequestParam("class") String className, String birthday) {
+    String addStudent(@RequestParam String sid,
+                      @RequestParam Integer age,
+                      @RequestParam String sex,
+                      @RequestParam String name,
+                      @RequestParam String dname,
+                      @RequestParam("class") String className,
+                      @RequestParam String birthday) {
         Student student = new Student();
         student.setSid(sid);
         student.setAge(age);
@@ -58,7 +66,11 @@ public class MongoController {
     }
 
     @RequestMapping("addTeacher")
-    String addTeacher(String tid, Integer age, String sex, String name, String dname) {
+    String addTeacher(@RequestParam String tid,
+                      @RequestParam Integer age,
+                      @RequestParam String sex,
+                      @RequestParam String name,
+                      @RequestParam String dname) {
         Teacher teacher = new Teacher();
         teacher.setTid(tid);
         teacher.setAge(age);
@@ -75,7 +87,10 @@ public class MongoController {
     }
 
     @RequestMapping("addCourse")
-    String addCourse(String cid, Double credit, String fcid, String name) {
+    String addCourse(@RequestParam String cid,
+                     @RequestParam Double credit,
+                     @RequestParam(required = false) String fcid,
+                     @RequestParam String name) {
         Course course = new Course();
         course.setCid(cid);
         course.setCredit(credit);
@@ -88,5 +103,30 @@ public class MongoController {
             e.printStackTrace();
             return "插入失败";
         }
+    }
+
+    @RequestMapping("uploadExcel")
+    String uploadExcel(@RequestParam MultipartFile excel, @RequestParam String sheetName) throws IOException {
+        if (excel == null || excel.isEmpty()) {
+            return "插入失败";
+        } else {
+            switch (sheetName) {
+                case "student":
+                    List<Student> students = EasyExcel.read(excel.getInputStream(), Student.class, null).sheet(sheetName).doReadSync();
+                    mongoDao.insertStudents(students);
+                    break;
+                case "teacher":
+                    List<Teacher> teachers = EasyExcel.read(excel.getInputStream(), Teacher.class, null).sheet(sheetName).doReadSync();
+                    mongoDao.insertTeachers(teachers);
+                    break;
+                case "course":
+                    List<Course> courses = EasyExcel.read(excel.getInputStream(), Course.class, null).sheet(sheetName).doReadSync();
+                    mongoDao.insertCourses(courses);
+                    break;
+                default:
+                    return "插入失败";
+            }
+        }
+        return "插入成功";
     }
 }

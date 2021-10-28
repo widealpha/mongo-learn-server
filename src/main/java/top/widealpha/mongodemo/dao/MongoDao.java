@@ -63,31 +63,40 @@ public class MongoDao {
     }
 
     // 插入学生列表
-    public void insertStudents(List<Student> students){
+    public void insertStudents(List<Student> students) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("student");
         List<Document> studentList = new ArrayList<>();
-        for (Student s:students){
+        for (Student s : students) {
+            if (s.getSid() == null || s.getSid().isEmpty()) {
+                continue;
+            }
             studentList.add(Document.parse(JSON.toJSONString(s)));
         }
         collection.insertMany(studentList);
     }
 
     // 插入教师列表
-    public void insertTeachers(List<Teacher> teachers){
+    public void insertTeachers(List<Teacher> teachers) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("teacher");
         List<Document> teacherList = new ArrayList<>();
-        for (Teacher s:teachers){
+        for (Teacher s : teachers) {
+            if (s.getTid() == null || s.getTid().isEmpty()) {
+                continue;
+            }
             teacherList.add(Document.parse(JSON.toJSONString(s)));
         }
         collection.insertMany(teacherList);
     }
 
     // 插入课程列表
-    public void insertCourses(List<Course> courses){
+    public void insertCourses(List<Course> courses) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("course");
         List<Document> courseList = new ArrayList<>();
-        for (Course s:courses){
-            courseList.add(Document.parse(JSON.toJSONString(s)));
+        for (Course c : courses) {
+            if (c.getCid() == null || c.getCid().isEmpty()) {
+                continue;
+            }
+            courseList.add(Document.parse(JSON.toJSONString(c)));
         }
         collection.insertMany(courseList);
     }

@@ -1,9 +1,15 @@
 package top.widealpha.mongodemo.bean;
 
+import com.alibaba.excel.annotation.ExcelProperty;
+
 public class Course {
+    @ExcelProperty("课程号")
     String cid;
+    @ExcelProperty("课程名")
     String name;
+    @ExcelProperty("先行课程号")
     String fcid;
+    @ExcelProperty("学分")
     Double credit;
 
     public String getCid() {

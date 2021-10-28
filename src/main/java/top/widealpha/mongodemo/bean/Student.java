@@ -1,20 +1,26 @@
 package top.widealpha.mongodemo.bean;
 
 
+import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.fastjson.annotation.JSONField;
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
 
 public class Student {
+    @ExcelProperty("学号")
     String sid;
+    @ExcelProperty("姓名")
     String name;
+    @ExcelProperty("性别")
     String sex;
+    @ExcelProperty("年龄")
     Integer age;
+    @ExcelProperty("出生日期")
     String birthday;
+    @ExcelProperty("院系名称")
     String dname;
     @JsonProperty("class")
     @JSONField(name = "class")
+    @ExcelProperty("班级")
     String className;
 
     public String getSid() {
@@ -71,5 +77,18 @@ public class Student {
 
     public void setClassName(String className) {
         this.className = className;
+    }
+
+    @Override
+    public String toString() {
+        return "Student{" +
+                "sid='" + sid + '\'' +
+                ", name='" + name + '\'' +
+                ", sex='" + sex + '\'' +
+                ", age=" + age +
+                ", birthday='" + birthday + '\'' +
+                ", dname='" + dname + '\'' +
+                ", className='" + className + '\'' +
+                '}';
     }
 }
