@@ -129,4 +129,70 @@ public class MongoController {
         }
         return "插入成功";
     }
+
+
+    @RequestMapping("updateStudent")
+    String updateStudent(@RequestParam String sid,
+                         @RequestParam Integer age,
+                         @RequestParam String sex,
+                         @RequestParam String name,
+                         @RequestParam String dname,
+                         @RequestParam("class") String className,
+                         @RequestParam String birthday) {
+        Student student = new Student();
+        student.setSid(sid);
+        student.setAge(age);
+        student.setSex(sex);
+        student.setName(name);
+        student.setDname(dname);
+        student.setClassName(className);
+        student.setBirthday(birthday);
+        try {
+            mongoDao.updateStudent(Collections.singletonList(student));
+            return "更新成功";
+        } catch (MongoException e) {
+            e.printStackTrace();
+            return "更新失败";
+        }
+    }
+
+    @RequestMapping("updateTeacher")
+    String updateTeacher(@RequestParam String tid,
+                         @RequestParam Integer age,
+                         @RequestParam String sex,
+                         @RequestParam String name,
+                         @RequestParam String dname) {
+        Teacher teacher = new Teacher();
+        teacher.setTid(tid);
+        teacher.setAge(age);
+        teacher.setSex(sex);
+        teacher.setName(name);
+        teacher.setDname(dname);
+        try {
+            mongoDao.updateTeacher(Collections.singletonList(teacher));
+            return "更新成功";
+        } catch (MongoException e) {
+            e.printStackTrace();
+            return "更新失败";
+        }
+    }
+
+    @RequestMapping("updateCourse")
+    String updateCourse(@RequestParam String cid,
+                        @RequestParam Double credit,
+                        @RequestParam(required = false) String fcid,
+                        @RequestParam String name) {
+        Course course = new Course();
+        course.setCid(cid);
+        course.setCredit(credit);
+        course.setFcid(fcid);
+        course.setName(name);
+        try {
+            mongoDao.updateCourse(Collections.singletonList(course));
+            return "更新成功";
+        } catch (MongoException e) {
+            e.printStackTrace();
+            return "更新失败";
+        }
+    }
 }

@@ -1,10 +1,19 @@
 package top.widealpha.mongodemo.bean;
 
 public class StudentCourse {
+    String _id;
     String sid;
     String cid;
     String tid;
     Double score;
+
+    public String get_id() {
+        return _id;
+    }
+
+    public void set_id(String _id) {
+        this._id = _id;
+    }
 
     public String getSid() {
         return sid;

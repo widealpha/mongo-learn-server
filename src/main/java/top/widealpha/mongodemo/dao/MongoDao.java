@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
@@ -99,5 +100,32 @@ public class MongoDao {
             courseList.add(Document.parse(JSON.toJSONString(c)));
         }
         collection.insertMany(courseList);
+    }
+
+    // 更新student数据
+    public void updateStudent(List<Student> students) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("student");
+        for (Student s : students) {
+            BasicDBObject dbObject = BasicDBObject.parse(JSON.toJSONString(s));
+            collection.updateOne(new Document("sid", s.getSid()), new BasicDBObject("$set", dbObject));
+        }
+    }
+
+    // 更新teacher数据
+    public void updateTeacher(List<Teacher> teachers) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("teacher");
+        for (Teacher t : teachers) {
+            BasicDBObject dbObject = BasicDBObject.parse(JSON.toJSONString(t));
+            collection.updateOne(new BasicDBObject("tid", t.getTid()), new BasicDBObject("$set", dbObject));
+        }
+    }
+
+    // 更新course数据
+    public void updateCourse(List<Course> courses) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("course");
+        for (Course c : courses) {
+            BasicDBObject dbObject = BasicDBObject.parse(JSON.toJSONString(c));
+            collection.updateOne(new Document("cid", c.getCid()), new BasicDBObject("$set", dbObject));
+        }
     }
 }

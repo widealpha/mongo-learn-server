@@ -6,6 +6,7 @@ import com.alibaba.fastjson.annotation.JSONField;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Student {
+    String _id;
     @ExcelProperty("学号")
     String sid;
     @ExcelProperty("姓名")
@@ -22,6 +23,14 @@ public class Student {
     @JSONField(name = "class")
     @ExcelProperty("班级")
     String className;
+
+    public String get_id() {
+        return _id;
+    }
+
+    public void set_id(String _id) {
+        this._id = _id;
+    }
 
     public String getSid() {
         return sid;
