@@ -11,6 +11,7 @@ import org.bson.Document;
 import org.springframework.stereotype.Component;
 import top.widealpha.mongodemo.bean.Course;
 import top.widealpha.mongodemo.bean.Student;
+import top.widealpha.mongodemo.bean.StudentCourse;
 import top.widealpha.mongodemo.bean.Teacher;
 
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ public class MongoDao {
         return students;
     }
 
-    //
+    //找出年龄小于20岁的所有学生
     public List<Student> findAgeLessStudents(int age) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("student");
         List<Student> students = new ArrayList<>();
@@ -102,6 +103,11 @@ public class MongoDao {
         collection.insertMany(courseList);
     }
 
+    // 插入课程列表
+    public void insertStudentCourseList(List<StudentCourse> studentCourseList) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("student_course");
+    }
+
     // 更新student数据
     public void updateStudent(List<Student> students) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("student");
@@ -127,5 +133,51 @@ public class MongoDao {
             BasicDBObject dbObject = BasicDBObject.parse(JSON.toJSONString(c));
             collection.updateOne(new Document("cid", c.getCid()), new BasicDBObject("$set", dbObject));
         }
+    }
+
+    // 查询学生所选课程
+    public List<Course> selectChooseCourse(String sid) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("student_course");
+        MongoCollection<Document> courseCollection = mongoDatabase.getCollection("course");
+        List<Course> courses = new ArrayList<>();
+        for (Document i : collection.find(new Document("sid", new Document("$eq", sid)))) {
+            for (Document j : courseCollection.find(new Document("cid", new Document("$eq", i.getString("cid"))))) {
+                courses.add(JSON.parseObject(j.toJson(), Course.class));
+            }
+        }
+        return courses;
+    }
+
+
+    public boolean insertChooseCourse(String sid, String cid) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("student_course");
+        MongoCollection<Document> teacherCourseCollection = mongoDatabase.getCollection("teacher_course");
+        String tid;
+        Document document = teacherCourseCollection.find(new Document("cid", new Document("$eq", cid))).first();
+        if (document == null) {
+            tid = null;
+        } else {
+            tid = document.getString("tid");
+        }
+        StudentCourse studentCourse = new StudentCourse();
+        studentCourse.setCid(cid);
+        studentCourse.setTid(tid);
+        studentCourse.setSid(sid);
+        collection.insertOne(Document.parse(JSON.toJSONString(studentCourse)));
+        return true;
+    }
+
+    public boolean deleteChooseCourse(String sid, String cid) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("student_course");
+        BasicDBObject deleteObject = new BasicDBObject().append("cid", cid).append("sid", sid);
+        collection.deleteOne(deleteObject);
+        return true;
+    }
+
+    public boolean updateChooseCourse(String sid, String cid, double score) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("student_course");
+        BasicDBObject oldObject = new BasicDBObject().append("cid", cid).append("sid", sid);
+        collection.updateOne(oldObject, new BasicDBObject("$set", new BasicDBObject("score", score)));
+        return true;
     }
 }

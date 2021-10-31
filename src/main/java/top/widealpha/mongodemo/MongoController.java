@@ -130,6 +130,23 @@ public class MongoController {
         return "插入成功";
     }
 
+    String uploadTeacherCourseExcel(@RequestParam MultipartFile excel){
+        if (excel == null || excel.isEmpty()) {
+            return "插入失败";
+        } else {
+
+        }
+        return "插入成功";
+    }
+
+    String uploadStudentCourseExcel(@RequestParam MultipartFile excel){
+        if (excel == null || excel.isEmpty()) {
+            return "插入失败";
+        } else {
+
+        }
+        return "插入成功";
+    }
 
     @RequestMapping("updateStudent")
     String updateStudent(@RequestParam String sid,
@@ -194,5 +211,25 @@ public class MongoController {
             e.printStackTrace();
             return "更新失败";
         }
+    }
+
+    @RequestMapping("studentChooseCourse")
+    List<Course> studentChooseCourse(@RequestParam String sid) {
+        return mongoDao.selectChooseCourse(sid);
+    }
+
+    @RequestMapping("chooseCourse")
+    boolean updateCourse(@RequestParam String sid, @RequestParam String cid) {
+        return mongoDao.insertChooseCourse(sid, cid);
+    }
+
+    @RequestMapping("deleteChooseCourse")
+    boolean deleteChooseCourse(@RequestParam String sid, @RequestParam String cid) {
+        return mongoDao.deleteChooseCourse(sid, cid);
+    }
+
+    @RequestMapping("updateScore")
+    boolean updateScore(@RequestParam String sid, @RequestParam String cid, @RequestParam double score) {
+        return mongoDao.updateChooseCourse(sid, cid, score);
     }
 }
