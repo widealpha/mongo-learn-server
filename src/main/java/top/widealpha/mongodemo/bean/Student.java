@@ -7,21 +7,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Student {
     String _id;
-    @ExcelProperty("学号")
+    @ExcelProperty("SID")
     String sid;
-    @ExcelProperty("姓名")
+    @ExcelProperty("NAME")
     String name;
-    @ExcelProperty("性别")
+    @ExcelProperty("SEX")
     String sex;
-    @ExcelProperty("年龄")
+    @ExcelProperty("AGE")
     Integer age;
-    @ExcelProperty("出生日期")
+    @ExcelProperty("BIRTHDAY")
     String birthday;
-    @ExcelProperty("院系名称")
+    @ExcelProperty("DNAME")
     String dname;
     @JsonProperty("class")
     @JSONField(name = "class")
-    @ExcelProperty("班级")
+    @ExcelProperty("CLASS")
     String className;
 
     public String get_id() {

@@ -2,20 +2,20 @@ package top.widealpha.mongodemo.dao;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.BsonField;
+import org.bson.BasicBSONObject;
+import org.bson.BsonString;
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.springframework.stereotype.Component;
-import top.widealpha.mongodemo.bean.Course;
-import top.widealpha.mongodemo.bean.Student;
-import top.widealpha.mongodemo.bean.StudentCourse;
-import top.widealpha.mongodemo.bean.Teacher;
+import top.widealpha.mongodemo.bean.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class MongoDao {
@@ -32,6 +32,24 @@ public class MongoDao {
             students.add(JSONObject.parseObject(item.toJson(), Student.class));
         }
         return students;
+    }
+
+    public List<Teacher> allTeachers() {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("teacher");
+        List<Teacher> teachers = new ArrayList<>();
+        for (var item : collection.find()) {
+            teachers.add(JSONObject.parseObject(item.toJson(), Teacher.class));
+        }
+        return teachers;
+    }
+
+    public List<Course> allCourses() {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("course");
+        List<Course> courses = new ArrayList<>();
+        for (var item : collection.find()) {
+            courses.add(JSONObject.parseObject(item.toJson(), Course.class));
+        }
+        return courses;
     }
 
     //找出年龄小于20岁的所有学生
@@ -103,9 +121,30 @@ public class MongoDao {
         collection.insertMany(courseList);
     }
 
-    // 插入课程列表
+    // 插入学生课程关联列表
     public void insertStudentCourseList(List<StudentCourse> studentCourseList) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("student_course");
+        List<Document> relationList = new ArrayList<>();
+        for (StudentCourse sc : studentCourseList) {
+            if (sc.getCid() == null || sc.getCid().isEmpty()) {
+                continue;
+            }
+            relationList.add(Document.parse(JSON.toJSONString(sc)));
+        }
+        collection.insertMany(relationList);
+    }
+
+    // 插入学生老师关联列表
+    public void insertTeacherCourseList(List<TeacherCourse> studentCourseList) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection("teacher_course");
+        List<Document> relationList = new ArrayList<>();
+        for (TeacherCourse tc : studentCourseList) {
+            if (tc.getCid() == null || tc.getCid().isEmpty()) {
+                continue;
+            }
+            relationList.add(Document.parse(JSON.toJSONString(tc)));
+        }
+        collection.insertMany(relationList);
     }
 
     // 更新student数据
@@ -142,7 +181,9 @@ public class MongoDao {
         List<Course> courses = new ArrayList<>();
         for (Document i : collection.find(new Document("sid", new Document("$eq", sid)))) {
             for (Document j : courseCollection.find(new Document("cid", new Document("$eq", i.getString("cid"))))) {
-                courses.add(JSON.parseObject(j.toJson(), Course.class));
+                Course course = JSON.parseObject(j.toJson(), Course.class);
+                course.setScore(i.getDouble("score"));
+                courses.add(course);
             }
         }
         return courses;
@@ -167,6 +208,7 @@ public class MongoDao {
         return true;
     }
 
+    // 删除课程
     public boolean deleteChooseCourse(String sid, String cid) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("student_course");
         BasicDBObject deleteObject = new BasicDBObject().append("cid", cid).append("sid", sid);
@@ -174,10 +216,113 @@ public class MongoDao {
         return true;
     }
 
+    // 更新分数
     public boolean updateChooseCourse(String sid, String cid, double score) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("student_course");
         BasicDBObject oldObject = new BasicDBObject().append("cid", cid).append("sid", sid);
         collection.updateOne(oldObject, new BasicDBObject("$set", new BasicDBObject("score", score)));
         return true;
+    }
+
+    // 排名前n的同学
+    public List<StudentExtend> topNStudents(int n) {
+        List<StudentExtend> studentExtends = new ArrayList<>();
+        MongoCollection<Document> studentCourseCollection = mongoDatabase.getCollection("student_course");
+        MongoCollection<Document> studentCollection = mongoDatabase.getCollection("student");
+        long time = System.currentTimeMillis();
+        AggregateIterable<Document> aggregate = studentCourseCollection.aggregate(Arrays.asList(
+                Aggregates.group("$sid", new BsonField("averageScore", new Document("$avg", "$score"))),
+                Aggregates.sort(new Document("averageScore", -1))));
+        int count = 1;
+        for (var i : aggregate) {
+            if (count++ > n) {
+                break;
+            }
+            var documents = studentCollection.find(
+                    new Document("sid", new Document("$eq", i.getString("_id"))));
+            StudentExtend studentExtend = JSON.parseObject(documents.first().toJson(), StudentExtend.class);
+            studentExtend.setScore(i.getDouble("averageScore"));
+            studentExtends.add(studentExtend);
+
+        }
+        System.out.println("花费时间" + (System.currentTimeMillis() - time) + "ms");
+        return studentExtends;
+    }
+
+    // 选课数目前n的同学
+    public List<StudentExtend> chooseCourseTopNStudents(int n) {
+        List<StudentExtend> studentExtends = new ArrayList<>();
+        MongoCollection<Document> studentCourseCollection = mongoDatabase.getCollection("student_course");
+        MongoCollection<Document> studentCollection = mongoDatabase.getCollection("student");
+        long time = System.currentTimeMillis();
+        AggregateIterable<Document> aggregate = studentCourseCollection.aggregate(Arrays.asList(
+                Aggregates.group("$sid", new BsonField("courseCount", new Document("$sum", 1))),
+                Aggregates.sort(new Document("courseCount", -1))));
+        int count = 1;
+        for (var i : aggregate) {
+            if (count++ > n) {
+                break;
+            }
+            var documents = studentCollection.find(
+                    new Document("sid", new Document("$eq", i.getString("_id"))));
+            StudentExtend studentExtend = JSON.parseObject(documents.first().toJson(), StudentExtend.class);
+            studentExtend.setCourseCount(i.getInteger("courseCount"));
+            studentExtends.add(studentExtend);
+
+        }
+        System.out.println("花费时间" + (System.currentTimeMillis() - time) + "ms");
+        return studentExtends;
+    }
+
+
+    // 每节课的选课人数与平均成绩
+    public List<CourseExtend> courseChooseCountAndAvgScore() {
+        List<CourseExtend> courseExtends = new ArrayList<>();
+        MongoCollection<Document> studentCourseCollection = mongoDatabase.getCollection("student_course");
+        MongoCollection<Document> courseCollection = mongoDatabase.getCollection("course");
+        long time = System.currentTimeMillis();
+        // 平均成绩
+        AggregateIterable<Document> aggregate = studentCourseCollection.aggregate(List.of(
+                Aggregates.group("$cid", new BsonField("averageScore", new Document("$avg", "$score")),
+                        new BsonField("chooseCount", new Document("$sum", 1)))));
+        for (var i : aggregate) {
+            var documents = courseCollection.find(
+                    new Document("cid", new Document("$eq", i.getString("_id"))));
+            CourseExtend courseExtend = JSON.parseObject(documents.first().toJson(), CourseExtend.class);
+            courseExtend.setAverageScore(i.getDouble("averageScore"));
+            courseExtend.setChooseCount(i.getInteger("chooseCount"));
+            courseExtends.add(courseExtend);
+        }
+        System.out.println("花费时间" + (System.currentTimeMillis() - time) + "ms");
+        return courseExtends;
+    }
+
+    //求每门课程最高成绩以及最高成绩对应的学生姓名
+    public List<CourseExtend> courseMaxScoreWithStudentName() {
+        List<CourseExtend> courseExtends = new ArrayList<>();
+        MongoCollection<Document> studentCourseCollection = mongoDatabase.getCollection("student_course");
+        MongoCollection<Document> courseCollection = mongoDatabase.getCollection("course");
+        MongoCollection<Document> studentCollection = mongoDatabase.getCollection("student");
+        long time = System.currentTimeMillis();
+        // 平均成绩
+        AggregateIterable<Document> aggregate = studentCourseCollection.aggregate(Arrays.asList(
+                Aggregates.sort(new Document(new Document("score", 1))),
+                Aggregates.group("$cid", new BsonField("maxScore", new Document("$max", "$score")),
+                        new BsonField("doc", new Document("$first", new Document("sid", "$sid").append("maxScore", "$maxScore"))))));
+
+        for (var i : aggregate) {
+            var documents = courseCollection.find(
+                    new Document("cid", new Document("$eq", i.getString("_id"))));
+            CourseExtend courseExtend = JSON.parseObject(documents.first().toJson(), CourseExtend.class);
+
+            String sid = (String) ((Map) i.get("doc")).get("sid");
+            var documents1 = studentCollection.find(
+                    new Document("sid", new Document("$eq", sid)));
+            courseExtend.setMaxScore(i.getDouble("maxScore"));
+            courseExtend.setMaxScoreStudentName(documents1.first().getString("name"));
+            courseExtends.add(courseExtend);
+        }
+        System.out.println("花费时间" + (System.currentTimeMillis() - time) + "ms");
+        return courseExtends;
     }
 }

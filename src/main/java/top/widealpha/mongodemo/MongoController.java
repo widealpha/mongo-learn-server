@@ -5,9 +5,7 @@ import com.mongodb.MongoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import top.widealpha.mongodemo.bean.Course;
-import top.widealpha.mongodemo.bean.Student;
-import top.widealpha.mongodemo.bean.Teacher;
+import top.widealpha.mongodemo.bean.*;
 import top.widealpha.mongodemo.dao.MongoDao;
 
 import java.io.IOException;
@@ -16,13 +14,28 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/")
+@CrossOrigin
 public class MongoController {
     @Autowired
     MongoDao mongoDao;
 
     @RequestMapping("allStudents")
-    List<Student> allStudent() {
-        return mongoDao.allStudents();
+    List<Student> allStudents() {
+        List<Student> list = mongoDao.allStudents();
+        return list.size() > 50 ? list.subList(0, 50) : list;
+    }
+
+    @RequestMapping("allTeachers")
+    List<Teacher> allTeachers() {
+        List<Teacher> list = mongoDao.allTeachers();
+        return list.size() > 50 ? list.subList(0, 50) : list;
+    }
+
+
+    @RequestMapping("allCourses")
+    List<Course> allCourses() {
+        List<Course> list = mongoDao.allCourses();
+        return list.size() > 50 ? list.subList(0, 50) : list;
     }
 
     @RequestMapping("studentsYounger20")
@@ -35,8 +48,8 @@ public class MongoController {
         return mongoDao.findCourseWithFcid("300001");
     }
 
-    @RequestMapping("findCourseWithDname")
-    List<Teacher> findCourseWithDname() {
+    @RequestMapping("findTeacherWithDname")
+    List<Teacher> findTeacherWithDname() {
         return mongoDao.findTeacherWithDname("CS");
     }
 
@@ -130,20 +143,58 @@ public class MongoController {
         return "插入成功";
     }
 
-    String uploadTeacherCourseExcel(@RequestParam MultipartFile excel){
+    @RequestMapping("uploadStudentExcel")
+    String uploadStudentExcel(@RequestParam MultipartFile excel) throws IOException {
         if (excel == null || excel.isEmpty()) {
             return "插入失败";
         } else {
-
+            List<Student> students = EasyExcel.read(excel.getInputStream(), Student.class, null).sheet(0).doReadSync();
+            mongoDao.insertStudents(students);
         }
         return "插入成功";
     }
 
-    String uploadStudentCourseExcel(@RequestParam MultipartFile excel){
+    @RequestMapping("uploadTeacherExcel")
+    String uploadTeacherExcel(@RequestParam MultipartFile excel) throws IOException {
         if (excel == null || excel.isEmpty()) {
             return "插入失败";
         } else {
+            List<Teacher> teachers = EasyExcel.read(excel.getInputStream(), Teacher.class, null).sheet(0).doReadSync();
+            mongoDao.insertTeachers(teachers);
+        }
+        return "插入成功";
+    }
 
+    @RequestMapping("uploadCourseExcel")
+    String uploadCourseExcel(@RequestParam MultipartFile excel) throws IOException {
+        if (excel == null || excel.isEmpty()) {
+            return "插入失败";
+        } else {
+            List<Course> courses = EasyExcel.read(excel.getInputStream(), Course.class, null).sheet(0).doReadSync();
+            mongoDao.insertCourses(courses);
+        }
+        return "插入成功";
+    }
+
+
+    @RequestMapping("uploadTeacherCourseExcel")
+    String uploadTeacherCourseExcel(@RequestParam MultipartFile excel) throws IOException {
+        if (excel == null || excel.isEmpty()) {
+            return "插入失败";
+        } else {
+            List<TeacherCourse> teacherCourses = EasyExcel.read(excel.getInputStream(), TeacherCourse.class, null).sheet(0).doReadSync();
+            mongoDao.insertTeacherCourseList(teacherCourses);
+        }
+        return "插入成功";
+    }
+
+    @RequestMapping("uploadStudentCourseExcel")
+    String uploadStudentCourseExcel(@RequestParam MultipartFile excel) throws IOException {
+        if (excel == null || excel.isEmpty()) {
+            return "插入失败";
+        } else {
+            List<StudentCourse> studentCourses = EasyExcel.read(excel.getInputStream(), StudentCourse.class, null).sheet(0).doReadSync();
+            mongoDao.insertStudentCourseList(studentCourses);
         }
         return "插入成功";
     }
@@ -231,5 +282,25 @@ public class MongoController {
     @RequestMapping("updateScore")
     boolean updateScore(@RequestParam String sid, @RequestParam String cid, @RequestParam double score) {
         return mongoDao.updateChooseCourse(sid, cid, score);
+    }
+
+    @RequestMapping("top10Students")
+    List<StudentExtend> top10Students(){
+        return mongoDao.topNStudents(10);
+    }
+
+    @RequestMapping("chooseCourseTop10Students")
+    List<StudentExtend> chooseCourseTop10Students(){
+        return mongoDao.chooseCourseTopNStudents(10);
+    }
+
+    @RequestMapping("courseChooseCountAndAvgScore")
+    List<CourseExtend> courseChooseCountAndAvgScore(){
+        return mongoDao.courseChooseCountAndAvgScore();
+    }
+
+    @RequestMapping("courseMaxScoreWithStudentName")
+    List<CourseExtend> courseMaxScoreWithStudentName(){
+        return mongoDao.courseMaxScoreWithStudentName();
     }
 }

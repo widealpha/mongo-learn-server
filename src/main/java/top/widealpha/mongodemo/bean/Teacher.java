@@ -4,15 +4,15 @@ import com.alibaba.excel.annotation.ExcelProperty;
 
 public class Teacher {
     String _id;
-    @ExcelProperty("教师编号")
+    @ExcelProperty("TID")
     String tid;
-    @ExcelProperty("教师姓名")
+    @ExcelProperty("NAME")
     String name;
-    @ExcelProperty("性别")
+    @ExcelProperty("SEX")
     String sex;
-    @ExcelProperty("年龄")
+    @ExcelProperty("AGE")
     Integer age;
-    @ExcelProperty("院系名称")
+    @ExcelProperty("DNAME")
     String dname;
 
     public String get_id() {

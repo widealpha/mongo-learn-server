@@ -4,14 +4,23 @@ import com.alibaba.excel.annotation.ExcelProperty;
 
 public class Course {
     String _id;
-    @ExcelProperty("课程号")
+    @ExcelProperty("CID")
     String cid;
-    @ExcelProperty("课程名")
+    @ExcelProperty("NAME")
     String name;
-    @ExcelProperty("先行课程号")
+    @ExcelProperty("FCID")
     String fcid;
-    @ExcelProperty("学分")
+    @ExcelProperty("CREDIT")
     Double credit;
+    Double score;
+
+    public Double getScore() {
+        return score;
+    }
+
+    public void setScore(Double score) {
+        this.score = score;
+    }
 
     public String get_id() {
         return _id;

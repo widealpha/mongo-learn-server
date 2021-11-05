@@ -1,8 +1,12 @@
 package top.widealpha.mongodemo.bean;
 
+import com.alibaba.excel.annotation.ExcelProperty;
+
 public class TeacherCourse {
     String _id;
+    @ExcelProperty("TID")
     String tid;
+    @ExcelProperty("CID")
     String cid;
 
     public String get_id() {
